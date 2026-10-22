@@ -7,7 +7,7 @@
 #   ./build/build-bundle.sh --with-rpms     # 额外抓取 openEuler 离线 RPM（需配置 docker-ce 源）
 #   ./build/build-bundle.sh --no-fonts      # 跳过字体收集
 #
-# 产物：dist/fileview-offline-<VERSION>-x86_64.tar.gz
+# 产物：dist/doclens-<VERSION>-x86_64.tar.gz
 # 该产物拷到内网目标机后，解压执行 deploy/install.sh 即可。
 # =============================================================================
 set -euo pipefail
@@ -24,7 +24,7 @@ DIST="$BASE/dist"
 IMAGES="$BASE/images"
 FONTS="$BASE/fonts"
 RPMS="$BASE/rpms"
-BUNDLE_NAME="fileview-offline-${VERSION}-${ARCH}"
+BUNDLE_NAME="doclens-${VERSION}-${ARCH}"
 
 WITH_RPMS=0
 WITH_FONTS=1

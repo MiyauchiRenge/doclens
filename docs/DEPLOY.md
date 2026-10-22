@@ -20,7 +20,7 @@
 ## 目录结构
 
 ```
-fileview-offline/
+doclens/
 ├── VERSION / versions.env     版本与镜像坐标（唯一需要改的地方）
 ├── LICENSE / README.md
 ├── THIRD_PARTY.md             依赖许可清单
@@ -66,9 +66,9 @@ fileview-offline/
 ## 安装
 
 ```bash
-sha256sum -c fileview-offline-1.0.0-x86_64.tar.gz.sha256
-tar -xzf fileview-offline-1.0.0-x86_64.tar.gz
-cd fileview-offline-1.0.0-x86_64
+sha256sum -c doclens-1.0.0-x86_64.tar.gz.sha256
+tar -xzf doclens-1.0.0-x86_64.tar.gz
+cd doclens-1.0.0-x86_64
 
 sudo bash deploy/preflight.sh            # 只读体检，建议先跑
 sudo bash deploy/install.sh              # 默认 8080

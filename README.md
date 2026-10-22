@@ -1,4 +1,4 @@
-# 内网离线文档预览平台
+# DocLens · 内网离线文档预览平台
 
 > 一个可完全离线部署的文档预览 / 转换服务：**OFD、Office、PDF 在线预览**，
 > **PDF ⇄ Word 互转**，**扫描件 OCR**。为内网环境设计，不依赖任何外部 CDN。
@@ -63,29 +63,63 @@
 
 ## 快速开始
 
-### 方式一：在有网机器上构建离线包
+部署分**两步**：先在能联网的机器上做出离线包，再把包拷进内网安装。
+
+```
+ ┌──────────── 构建机（能上外网）────────────┐      ┌───────── 内网目标机（离线）─────────┐
+ │ 1. clone 仓库                            │      │ 3. 校验 + 解压                       │
+ │ 2. ./build/build-bundle.sh               │ ───► │ 4. deploy/install.sh                 │
+ │    → dist/doclens-1.0.0-x86_64.tar.gz    │ 传输 │    → http://<内网IP>:8080            │
+ └──────────────────────────────────────────┘      └──────────────────────────────────────┘
+```
+
+> 如果目标机本身能上网，或者公司有内网镜像仓库（Harbor 等），
+> 两步可以在同一台机器上完成，不必拷包。
+
+### 第 1 步：在构建机上出离线包
+
+**构建机要求**：x86_64 Linux + Docker + **能访问镜像仓库**（Docker Hub 或内网 Harbor）
++ **能访问 PyPI**（构建 portal 镜像要 pip 装依赖）+ 磁盘 ≥ 10 GB。
 
 ```bash
-git clone <this-repo> && cd fileview-offline
-./build/build-bundle.sh            # 产出 dist/fileview-offline-1.0.0-x86_64.tar.gz
+git clone https://github.com/MiyauchiRenge/doclens.git
+cd doclens
+./build/build-bundle.sh
+# 产物：dist/doclens-1.0.0-x86_64.tar.gz（约 1.1 GB）
 ```
 
 构建脚本会拉镜像、构建 portal、**跑一次健康检查冒烟**再打包——
 任一步失败就停下，不会产出「看起来成功但装不上」的包。
 
-国内环境可换 pip 源：
+常见变体：
+
+```bash
+# 镜像已在本地（例如刚从内网仓库拉过），跳过拉取与构建
+./build/build-bundle.sh --no-pull
+
+# 把 Docker 的 RPM 也打进包（目标机没配 dnf 源时用）
+./build/build-bundle.sh --with-rpms
+```
+
+若构建机只能连内网仓库，把 `versions.env` 里的镜像名改成内网地址即可；
+pip 源可换国内镜像：
 
 ```bash
 docker build --build-arg PIP_INDEX_URL=https://pypi.tuna.tsinghua.edu.cn/simple \
   -t fileview/portal:1.0.0 services/portal
 ```
 
-### 方式二：内网一键安装
+### 第 2 步：拷进内网安装
+
+**目标机要求**：x86_64 / Docker 20.10+ / Compose v2 /
+内存 ≥ 4 GB（2 GB 能跑但转码吃紧）/ 磁盘 ≥ 10 GB。
+
+传输方式随意：U 盘、WinSCP、`scp` 都行。把 `.tar.gz` 和 `.sha256` 一起拷过去。
 
 ```bash
-sha256sum -c fileview-offline-1.0.0-x86_64.tar.gz.sha256
-tar -xzf fileview-offline-1.0.0-x86_64.tar.gz
-cd fileview-offline-1.0.0-x86_64
+sha256sum -c doclens-1.0.0-x86_64.tar.gz.sha256
+tar -xzf doclens-1.0.0-x86_64.tar.gz
+cd doclens-1.0.0-x86_64
 
 sudo bash deploy/preflight.sh          # 可选，只读体检
 sudo bash deploy/install.sh --port 8080
@@ -93,8 +127,8 @@ sudo bash deploy/install.sh --port 8080
 
 装完访问 `http://<内网IP>:8080`。
 
-**环境要求**：x86_64 / Docker 20.10+ / Compose v2 / 内存 ≥ 4 GB（2 GB 可跑但转码吃紧）
-/ 磁盘 ≥ 10 GB。
+> **目标机没有 Docker？** 三种解决方式见 [docs/DEPLOY.md](docs/DEPLOY.md#无-docker-的机器)：
+> 用内网 dnf 源安装、把 RPM 打进包、或手动准备 RPM。
 
 ## 配置
 
@@ -172,6 +206,6 @@ sudo bash deploy/install.sh --port 8080
 内网自用不对外分发时，保持源码仓库可访问通常即可满足第 13 条。
 若需闭源商用，须购买 PyMuPDF 商业授权或替换掉它。
 
-**源码获取（第 13 条）**：https://github.com/MiyauchiRenge/fileview-offline
+**源码获取（第 13 条）**：https://github.com/MiyauchiRenge/doclens
 
 第三方组件许可见 [THIRD_PARTY.md](THIRD_PARTY.md)。
