@@ -62,7 +62,7 @@ docker compose restart kkfileview
 ## 版权提醒
 
 **不要放商业字体**（宋体、微软雅黑、等线等属于微软/方正的商业授权字体）。
-kkFileView 镜像自带的那些由镜像提供方负责；**你自己往这里加的必须是可再分发的开源字体**。
+kkFileView 镜像自带的那些由镜像提供方负责；**此处添加的字体须为可再分发的开源字体**。
 
 可选开源字体：思源黑体/思源宋体（SIL OFL）、Noto CJK（SIL OFL）、
 文泉驿系列（GPL + 字体例外）、Carlito/Caladea（SIL OFL，兼容 Calibri/Cambria）。
