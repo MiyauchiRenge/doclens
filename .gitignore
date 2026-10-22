@@ -1,0 +1,22 @@
+# 构建产物，不入库
+dist/
+images/
+*.tar.gz
+*.tar
+*.sha256
+
+# 本地运行配置（含端口等，由 install.sh 生成）
+compose/.env
+
+# Python
+__pycache__/
+*.pyc
+.venv/
+venv/
+
+# 系统 / 编辑器
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+*.log

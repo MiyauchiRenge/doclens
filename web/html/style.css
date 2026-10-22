@@ -1,0 +1,83 @@
+* { box-sizing: border-box; }
+
+:root {
+  --bg: #f6f7f9;
+  --card: #ffffff;
+  --ink: #1b1f24;
+  --muted: #6b7280;
+  --line: #e3e6ea;
+  --primary: #2563eb;
+  --danger: #dc2626;
+}
+
+html, body {
+  margin: 0;
+  padding: 0;
+  background: var(--bg);
+  color: var(--ink);
+  font-family: "Noto Sans SC", "Source Han Sans SC", "Microsoft YaHei", system-ui, sans-serif;
+  font-size: 14px;
+  line-height: 1.6;
+}
+
+header { padding: 28px 24px 8px; max-width: 1080px; margin: 0 auto; }
+header h1 { margin: 0 0 4px; font-size: 20px; font-weight: 600; }
+header .sub { margin: 0; color: var(--muted); font-size: 13px; }
+
+main { max-width: 1080px; margin: 0 auto; padding: 16px 24px 32px; }
+
+.drop {
+  border: 2px dashed var(--line);
+  border-radius: 10px;
+  background: var(--card);
+  padding: 40px 20px;
+  text-align: center;
+  cursor: pointer;
+  transition: border-color .15s, background .15s;
+  outline: none;
+}
+.drop:hover, .drop:focus, .drop.over { border-color: var(--primary); background: #f0f6ff; }
+.drop-icon { font-size: 30px; color: var(--muted); line-height: 1; margin-bottom: 10px; }
+.drop-main { margin: 0 0 4px; font-size: 15px; }
+.drop-hint { margin: 0; color: var(--muted); font-size: 12px; }
+
+.panel { margin-top: 18px; background: var(--card); border: 1px solid var(--line); border-radius: 10px; padding: 16px; }
+.meta { display: flex; justify-content: space-between; gap: 12px; padding-bottom: 12px; border-bottom: 1px solid var(--line); }
+.fname { font-weight: 600; word-break: break-all; }
+.fsize { color: var(--muted); font-size: 12px; white-space: nowrap; }
+
+.actions { display: flex; gap: 10px; flex-wrap: wrap; margin: 14px 0 8px; }
+
+.btn {
+  border: 1px solid var(--line);
+  background: #fff;
+  color: var(--ink);
+  padding: 7px 16px;
+  border-radius: 7px;
+  font-size: 13px;
+  cursor: pointer;
+  transition: opacity .15s;
+}
+.btn:hover { opacity: .85; }
+.btn:disabled { opacity: .45; cursor: not-allowed; }
+.btn.primary { background: var(--primary); border-color: var(--primary); color: #fff; }
+.btn.danger { color: var(--danger); border-color: #f3c9c9; }
+
+.status { margin: 6px 0 0; color: var(--muted); font-size: 13px; min-height: 20px; }
+.status.error { color: var(--danger); }
+.status.ok { color: #15803d; }
+.status a { color: var(--primary); }
+
+.viewer { margin-top: 14px; border: 1px solid var(--line); border-radius: 8px; overflow: hidden; background: #fafafa; }
+.viewer iframe { display: block; width: 100%; height: 74vh; border: 0; background: #fff; }
+.viewer img { display: block; max-width: 100%; margin: 0 auto; padding: 12px; }
+
+/* OFD：由 flyfish 的 Web Component 渲染，自身用 Shadow DOM 隔离 */
+.ofd-host { height: 74vh; }
+.ofd-host flyfish-file-viewer { display: block; width: 100%; height: 100%; }
+
+.hidden { display: none !important; }
+
+footer { max-width: 1080px; margin: 0 auto; padding: 0 24px 40px; color: var(--muted); font-size: 12px; }
+footer p { margin: 4px 0; }
+footer .muted { color: #9aa1ab; }
