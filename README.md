@@ -109,8 +109,12 @@ docker build --build-arg PIP_INDEX_URL=https://pypi.tuna.tsinghua.edu.cn/simple 
 
 ### 第 2 步：导入内网安装
 
-**目标机要求**：x86_64、Docker 20.10+、Compose v2、内存 ≥ 4 GB（2 GB 可运行，
-转码余量不足）、磁盘 ≥ 10 GB。
+**目标机要求**：x86_64、Docker 20.10+、Compose v2、内存 ≥ 8 GB（推荐）、
+磁盘 ≥ 10 GB。
+
+内存低于 8 GB 时，kkFileView 的 JVM 与 LibreOffice 可能无法完成初始化，
+表现为预览返回 502；此时需调小 `KK_JAVA_OPTS`，详见[限制](#限制)与
+[docs/DEPLOY.md](docs/DEPLOY.md#排障)。
 
 传输方式不限（U 盘、WinSCP、`scp`），需同时携带 `.tar.gz` 与 `.sha256`。
 

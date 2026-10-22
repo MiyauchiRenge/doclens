@@ -161,6 +161,7 @@ docker compose up -d --force-recreate
 
 | 现象 | 排查方向 |
 |---|---|
+| **预览返回 502，nginx 日志为 `connect() failed (111: Connection refused) ... upstream: http://<ip>:8012`** | kkFileView 进程在但未监听 8012，通常是内存不足导致 JVM 未能完成初始化。`docker compose logs --tail=100 kkfileview` 查看是否有 `OutOfMemoryError`；调小 `KK_JAVA_OPTS`（如 `-Xmx384m`）或增加内存 |
 | 安装卡在"等待服务就绪" | `docker compose logs portal`；多为 tmpfs 不足或端口占用 |
 | 预览老格式一直转圈 | kkFileView 转码慢或队列堵塞：`docker compose logs kkfileview` |
 | kkFileView 反复重启、JVM `fatal error` 或 `unable to allocate file descriptor table` | 宿主 `nr_open` 过大被继承；确认 compose 的 `ulimits.nofile: 65535` 生效 |
@@ -182,6 +183,11 @@ docker compose up -d --force-recreate
 ## 资源占用
 
 实测环境：openEuler 22.03 LTS-SP3 / 3.4 GB 内存 / Docker 26.1.3。
+另在 16 GB / 8 核机器上验证，运行稳定、转码余量充足。
+
+> **内存是主要瓶颈**。3.4 GB 可运行，但 kkFileView 的 JVM 与 LibreOffice
+> 同时启动时余量很小，部分机器会出现 8012 端口未监听、预览返回 502。
+> 建议 8 GB 及以上；内存受限时按[排障](#排障)调小 `KK_JAVA_OPTS`。
 
 | 指标 | 数值 |
 |---|---|

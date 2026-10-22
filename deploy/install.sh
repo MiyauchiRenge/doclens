@@ -58,9 +58,20 @@ if ! command -v docker >/dev/null 2>&1; then
   warn "未检测到 docker，尝试从 rpms/ 离线安装…"
   if ls "$BASE"/rpms/*.rpm >/dev/null 2>&1; then
     if command -v dnf >/dev/null 2>&1; then
-      dnf install -y --disablerepo='*' "$BASE"/rpms/*.rpm || die "离线 RPM 安装失败。"
+      # 把 rpms/ 当作临时仓库，只安装需要的包，依赖由 dnf 从本地解析。
+      # 直接 `dnf install rpms/*.rpm` 会把包里携带的系统基础包（bash/glib2 等）
+      # 一并纳入事务，在版本略有差异的机器上有覆盖风险。
+      if dnf install -y --disablerepo='*' \
+           --repofrompath="local,$BASE/rpms" --enablerepo=local --nogpgcheck \
+           docker-ce docker-ce-cli containerd.io docker-compose-plugin; then
+        info "已通过本地仓库安装 Docker。"
+      else
+        warn "按包名安装失败，回退为安装目录内全部 RPM。"
+        dnf install -y --disablerepo='*' --nogpgcheck "$BASE"/rpms/*.rpm || die "离线 RPM 安装失败。"
+      fi
     elif command -v rpm >/dev/null 2>&1; then
-      rpm -Uvh --nodeps "$BASE"/rpms/*.rpm || die "离线 RPM 安装失败。"
+      rpm -Uvh --nodeps "$BASE"/rpms/docker-ce*.rpm "$BASE"/rpms/containerd.io*.rpm 2>/dev/null \
+        || die "离线 RPM 安装失败。"
     else
       die "系统没有 dnf/rpm，无法安装 Docker。"
     fi
