@@ -172,4 +172,6 @@ sudo bash deploy/install.sh --port 8080
 内网自用不对外分发时，保持源码仓库可访问通常即可满足第 13 条。
 若需闭源商用，须购买 PyMuPDF 商业授权或替换掉它。
 
+**源码获取（第 13 条）**：https://github.com/MiyauchiRenge/fileview-offline
+
 第三方组件许可见 [THIRD_PARTY.md](THIRD_PARTY.md)。
