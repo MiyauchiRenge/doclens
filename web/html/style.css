@@ -76,6 +76,13 @@ main { max-width: 1080px; margin: 0 auto; padding: 16px 24px 32px; }
 .ofd-host { height: 74vh; }
 .ofd-host flyfish-file-viewer { display: block; width: 100%; height: 100%; }
 
+/* 压缩包：只列出条目，不做内容渲染 */
+.archive-host { padding: 16px; max-height: 74vh; overflow: auto; }
+.archive-host .msg { margin: 0 0 12px; color: var(--muted); }
+.archive-host ul { margin: 0; padding-left: 20px; }
+.archive-host li { padding: 3px 0; font-size: 13px; word-break: break-all; }
+.archive-host .size { color: var(--muted); margin-left: 8px; }
+
 .hidden { display: none !important; }
 
 footer { max-width: 1080px; margin: 0 auto; padding: 0 24px 40px; color: var(--muted); font-size: 12px; }

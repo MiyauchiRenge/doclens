@@ -64,9 +64,14 @@ OFD_EXT = {".ofd"}
 KK_EXT = {
     ".doc", ".docx", ".xls", ".xlsx", ".ppt", ".pptx",
     ".rtf", ".odt", ".ods", ".odp", ".wps", ".et", ".dps",
-    ".zip", ".7z", ".rar", ".tar", ".gz",
     ".dwg", ".dxf", ".psd", ".eml", ".msg",
 }
+
+# 压缩包：**不交给 kkFileView**。
+# kkFileView 4.1.0 的 CompressFilePreviewImpl 对所有压缩包都调用 unRar()，
+# zip 解析不出 RAR 头 -> items 为 null -> 空指针 -> HTTP 500。
+# 改为由 portal 自行列出条目，避免把 500 抛给用户。
+ARCHIVE_EXT = {".zip", ".7z", ".rar", ".tar", ".gz", ".tgz", ".bz2", ".xz"}
 
 # 允许发起 PDF->Word 的格式
 CONVERTIBLE_EXT = {".pdf"}
@@ -313,6 +318,8 @@ async def upload(request: Request, file: UploadFile = File(...)) -> JSONResponse
         mode = "native"
     elif ext in OFD_EXT:
         mode = "ofd"
+    elif ext in ARCHIVE_EXT:
+        mode = "archive"
     else:
         mode = "kk"
 
@@ -335,6 +342,35 @@ async def upload(request: Request, file: UploadFile = File(...)) -> JSONResponse
 # --------------------------------------------------------------------------
 
 
+def _list_archive(path: Path, ext: str) -> list:
+    """列出压缩包条目。
+
+    zip 与 tar 系用标准库即可；rar / 7z 需要外部工具，此处返回空列表，
+    由前端提示"无法列出条目"。
+    """
+    import tarfile
+    import zipfile
+
+    limit = 300
+    entries = []
+    try:
+        if ext == ".zip":
+            with zipfile.ZipFile(path) as zf:
+                for info in zf.infolist():
+                    entries.append({"name": info.filename, "size": info.file_size, "dir": info.is_dir()})
+                    if len(entries) >= limit:
+                        break
+        elif ext in {".tar", ".gz", ".tgz", ".bz2", ".xz"}:
+            with tarfile.open(path) as tf:
+                for member in tf.getmembers():
+                    entries.append({"name": member.name, "size": member.size, "dir": member.isdir()})
+                    if len(entries) >= limit:
+                        break
+    except Exception:  # noqa: BLE001
+        return []
+    return entries
+
+
 @app.get("/api/preview/{sid}/{key}")
 async def preview(sid: str, key: str) -> dict:
     sess = _get_session(sid)
@@ -351,6 +387,17 @@ async def preview(sid: str, key: str) -> dict:
     # 用无后缀的 /api/file/{sid}/{key} 会显示"不支持该格式"。
     if ext in OFD_EXT:
         return {"mode": "ofd", "url": f"/api/file/{sid}/{key}/{quote(meta['name'])}"}
+
+    # 压缩包：由 portal 列条目，不转发给 kkFileView（其对 zip 会抛 500）
+    if ext in ARCHIVE_EXT:
+        entries = _list_archive(meta["path"], ext)
+        return {
+            "mode": "archive",
+            "url": "",
+            "entries": entries,
+            "message": "压缩包不支持在线渲染，以下为包内文件列表；查看内容请解压后单独上传。"
+                       if entries else "压缩包不支持在线渲染，且无法列出其条目（rar/7z 需解压工具）。",
+        }
 
     # 交给 kkFileView：它需要一个自己容器内可访问、且**带扩展名**的地址
     # （kkFileView 依据 URL 后缀判定文件类型，没有后缀会识别失败）

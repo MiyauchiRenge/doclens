@@ -19,6 +19,7 @@
 | Word / PPT → PDF | 复用 LibreOffice 转码产物 |
 | 扫描件 → 可搜索 PDF | 保留原页面，叠加不可见文字层 |
 | 扫描件 → 文字 Word | RapidOCR（PP-OCRv4），输出纯文本 |
+| 压缩包 | 列出包内文件与大小（不渲染内容） |
 
 未包含的能力见[限制](#限制)。
 
@@ -178,7 +179,12 @@ sudo bash deploy/install.sh --port 8080
 **3. 不支持 Excel → PDF。**
 kkFileView 的 Excel 预览采用 HTML 表格渲染，不生成 PDF。
 
-**4. 不提供 Office 在线编辑。**
+**4. 压缩包只列出条目，不渲染内容。**
+zip / tar 系可列出文件清单与大小，rar / 7z 因缺少解包工具无法列出。
+不交给 kkFileView 处理的原因：其 4.1.0 版本对压缩包统一调用 RAR 解析，
+zip 会触发空指针并返回 500，详见 [docs/VERIFY.md](docs/VERIFY.md)。
+
+**5. 不提供 Office 在线编辑。**
 本项目范围为预览与格式转换。
 
 ## 文档

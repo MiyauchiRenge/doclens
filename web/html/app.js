@@ -15,6 +15,7 @@
     frame: document.getElementById("frame"),
     image: document.getElementById("image"),
     ofdHost: document.getElementById("ofdHost"),
+    archiveHost: document.getElementById("archiveHost"),
     btnPreview: document.getElementById("btnPreview"),
     btnConvert: document.getElementById("btnConvert"),
     btnOcr: document.getElementById("btnOcr"),
@@ -43,6 +44,43 @@
       el.ofdHost.classList.add("hidden");
       el.ofdHost.textContent = "";
     }
+    if (el.archiveHost) {
+      el.archiveHost.classList.add("hidden");
+      el.archiveHost.textContent = "";
+    }
+  }
+
+  /* ---------------- 压缩包：列出条目 ---------------- */
+
+  function showArchive(data) {
+    el.frame.classList.add("hidden");
+    el.image.classList.add("hidden");
+    el.ofdHost.classList.add("hidden");
+    el.archiveHost.classList.remove("hidden");
+    el.archiveHost.textContent = "";
+
+    var msg = document.createElement("p");
+    msg.className = "msg";
+    msg.textContent = data.message || "压缩包不支持在线预览。";
+    el.archiveHost.appendChild(msg);
+
+    var list = data.entries || [];
+    if (list.length) {
+      var ul = document.createElement("ul");
+      list.forEach(function (item) {
+        var li = document.createElement("li");
+        li.textContent = item.name;
+        if (!item.dir && item.size) {
+          var span = document.createElement("span");
+          span.className = "size";
+          span.textContent = fmtSize(item.size);
+          li.appendChild(span);
+        }
+        ul.appendChild(li);
+      });
+      el.archiveHost.appendChild(ul);
+    }
+    setStatus("压缩包：共 " + list.length + " 项（仅列出，不渲染内容）", "ok");
   }
 
   /* ---------------- OFD 渲染（flyfish，纯前端） ----------------
@@ -181,6 +219,8 @@
           setStatus("已加载（浏览器原生渲染）", "ok");
         } else if (data.mode === "ofd") {
           showOfd(data.url);
+        } else if (data.mode === "archive") {
+          showArchive(data);
         } else {
           el.image.classList.add("hidden");
           el.frame.classList.remove("hidden");

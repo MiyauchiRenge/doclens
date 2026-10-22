@@ -345,3 +345,30 @@ bash tools/check.sh
 ```
 
 前两项在联网开发机上即可跑，不需要 Docker。
+
+
+#### 缺陷 5：压缩包预览返回 500
+
+现象：上传任意 `.zip`，预览页显示 kkFileView 的 Whitelabel 错误页（HTTP 500）。
+
+定位：kkFileView 4.1.0 的 `CompressFilePreviewImpl.filePreviewHandle` 对**所有**压缩包
+都调用 `compressFileReader.unRar(filePath, fileName)`（源码第 43 行），没有按类型分支。
+`unRar` 内部用 RAR 解析器读取，zip 解析不出 RAR 头，`items` 为 `null`，
+第 143 行 `for (FileHeaderRar header : items)` 抛空指针。
+
+处理：4.1.0 已是该镜像的最高版本，无法升级修复。改为由 portal 自身处理压缩包：
+把 `.zip/.7z/.rar/.tar/.gz/.tgz/.bz2/.xz` 从 kkFileView 路由中移除，
+预览接口返回 `mode=archive`，用标准库列出 zip / tar 条目（上限 300 条）。
+
+验证：`a.zip` 返回 `ARCHIVE_LIST(2)`，`a.tar.gz` 返回 `ARCHIVE_LIST(1)`，不再出现 500；
+rar / 7z 因缺少解包工具仅提示不支持。
+
+#### 格式矩阵实测
+
+| 文件 | 路由 | 结果 |
+|---|---|---|
+| pdf / png / jpg / txt / md / csv / json / xml | native | 通过 |
+| ofd | ofd（前端渲染） | 通过 |
+| docx / xlsx / pptx | kkFileView 转码 | 通过 |
+| zip / tar.gz | archive | 列出条目 |
+| gd / caj | kkFileView | 返回“暂不支持”提示页（非 500） |
