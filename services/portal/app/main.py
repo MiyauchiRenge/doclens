@@ -56,6 +56,22 @@ NATIVE_EXT = {
     ".mp4", ".webm", ".mp3", ".wav",
 }
 
+# 纯文本类：直接以 text/plain 输出，比丢给 kkFileView 转一道更快。
+# 统一按 UTF-8 处理（GBK 文本会显示为乱码）。
+TEXT_EXT = {
+    ".markdown", ".tsv", ".yaml", ".yml", ".ini", ".conf", ".cfg",
+    ".properties", ".sh", ".bash", ".bat", ".cmd", ".ps1",
+    ".py", ".java", ".js", ".ts", ".c", ".h", ".cpp", ".hpp", ".cc",
+    ".go", ".rs", ".rb", ".php", ".lua", ".sql", ".toml", ".diff", ".patch",
+}
+
+# 实测 kkFileView 4.1.0 无法处理、且没有其它可用路径的格式。
+# 直接给明确提示，避免用户看到它的通用错误页。
+UNSUPPORTED_EXT = {
+    ".eml", ".msg",                                   # 邮件
+    ".obj", ".stl", ".3ds", ".fbx", ".glb", ".gltf",  # 3D 模型
+}
+
 # OFD：浏览器不能原生打开，但前端 flyfish 渲染器可在浏览器内解析
 # （已实测：Apache-2.0 的 @file-viewer/renderer-ofd，纯前端、无外部资源）
 OFD_EXT = {".ofd"}
@@ -64,7 +80,7 @@ OFD_EXT = {".ofd"}
 KK_EXT = {
     ".doc", ".docx", ".xls", ".xlsx", ".ppt", ".pptx",
     ".rtf", ".odt", ".ods", ".odp", ".wps", ".et", ".dps",
-    ".dwg", ".dxf", ".psd", ".eml", ".msg",
+    ".dwg", ".dxf", ".psd",
 }
 
 # 压缩包：**不交给 kkFileView**。
@@ -314,7 +330,7 @@ async def upload(request: Request, file: UploadFile = File(...)) -> JSONResponse
     sess.files[key] = {"path": dst, "name": name, "size": total}
 
     ext = _ext(name)
-    if ext in NATIVE_EXT:
+    if ext in NATIVE_EXT or ext in TEXT_EXT:
         mode = "native"
     elif ext in OFD_EXT:
         mode = "ofd"
@@ -379,7 +395,7 @@ async def preview(sid: str, key: str) -> dict:
         raise HTTPException(status_code=404, detail="文件不存在")
 
     ext = _ext(meta["name"])
-    if ext in NATIVE_EXT:
+    if ext in NATIVE_EXT or ext in TEXT_EXT:
         return {"mode": "native", "url": f"/api/file/{sid}/{key}"}
 
     # OFD 由前端渲染器在浏览器内解析，不需要后端转码。
@@ -397,6 +413,18 @@ async def preview(sid: str, key: str) -> dict:
             "entries": entries,
             "message": "压缩包不支持在线渲染，以下为包内文件列表；查看内容请解压后单独上传。"
                        if entries else "压缩包不支持在线渲染，且无法列出其条目（rar/7z 需解压工具）。",
+        }
+
+    # 实测不支持的格式：直接说明，别让用户对着 kkFileView 的通用错误页猜
+    if ext in UNSUPPORTED_EXT:
+        return {
+            "mode": "unsupported",
+            "url": "",
+            "message": (
+                f"暂不支持 {ext} 格式的在线预览。"
+                "邮件与 3D 模型需要专用渲染组件，当前部署未包含。"
+                "如需查看，请转成 PDF 或图片后再上传。"
+            ),
         }
 
     # 交给 kkFileView：它需要一个自己容器内可访问、且**带扩展名**的地址
@@ -431,7 +459,11 @@ def _serve_raw(sid: str, key: str) -> FileResponse:
     if not path.exists():
         raise HTTPException(status_code=410, detail="文件已被清理")
 
-    media = MEDIA_TYPES.get(_ext(meta["name"]), "application/octet-stream")
+    ext = _ext(meta["name"])
+    if ext in TEXT_EXT:
+        media = "text/plain; charset=utf-8"
+    else:
+        media = MEDIA_TYPES.get(ext, "application/octet-stream")
     return FileResponse(
         path,
         media_type=media,

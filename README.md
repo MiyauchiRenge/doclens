@@ -15,6 +15,9 @@
 | OFD 预览 | 纯前端渲染（[flyfish file-viewer](https://github.com/flyfish-dev/file-viewer)），无后端转码，支持签章图层 |
 | Word / Excel / PPT 预览 | kkFileView + LibreOffice 转码 |
 | 老格式 `.doc` / `.xls` / `.ppt` 预览 | 同上 |
+| WPS / ODF（`.wps` `.et` `.dps` `.odt` `.ods` `.odp`） | 同上 |
+| TIFF 图片 | 同上（浏览器不能原生显示，由服务端转码） |
+| 文本与源码 | 按 `text/plain` 原样输出，不经转码 |
 | PDF → Word | pdf2docx，独立子进程 + 硬超时 |
 | Word / PPT → PDF | 复用 LibreOffice 转码产物 |
 | 扫描件 → 可搜索 PDF | 保留原页面，叠加不可见文字层 |
@@ -182,6 +185,10 @@ Chrome、Edge、Firefox、奇安信浏览器均已实测可用。
 页面收不到 `change` 事件，表现为点击无反应；极速模式下同样存在。
 排查结论：该浏览器的扩展（如「360浏览器智能助手」）会拦截文件选择，禁用扩展后可恢复。
 同为 Chromium 内核的奇安信浏览器无此问题。页面已对这类 UA 显示提示。
+
+**7. 邮件与 3D 模型不支持。**
+`.eml` `.msg` 与 `.obj` `.stl` `.3ds` `.fbx` `.glb` `.gltf` 经实测无法在当前 kkFileView
+镜像中渲染，页面会直接给出提示。查看内容请转成 PDF 或截图后上传。
 
 ## 文档
 

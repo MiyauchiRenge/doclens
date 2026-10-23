@@ -50,6 +50,13 @@
     }
   }
 
+  /* ---------------- 不支持的格式：只给说明 ---------------- */
+
+  function showUnsupported(data) {
+    showArchive({ message: data.message || "暂不支持该格式的在线预览。", entries: [] });
+    setStatus("暂不支持该格式", "error");
+  }
+
   /* ---------------- 压缩包：列出条目 ---------------- */
 
   function showArchive(data) {
@@ -244,6 +251,8 @@
           showOfd(data.url);
         } else if (data.mode === "archive") {
           showArchive(data);
+        } else if (data.mode === "unsupported") {
+          showUnsupported(data);
         } else {
           el.image.classList.add("hidden");
           el.frame.classList.remove("hidden");
