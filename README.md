@@ -72,9 +72,13 @@
  ┌──────────── 构建机（可联网）──────────────┐      ┌───────── 内网目标机（离线）─────────┐
  │ 1. clone 仓库                            │      │ 3. 校验 + 解压                       │
  │ 2. ./build/build-bundle.sh               │ ───► │ 4. deploy/install.sh                 │
- │    → dist/doclens-1.0.0-x86_64.tar.gz    │ 传输 │    → http://<内网IP>:8080            │
+ │    → dist/doclens-1.0.1-x86_64.tar.gz    │ 传输 │    → http://<内网IP>:8080            │
  └──────────────────────────────────────────┘      └──────────────────────────────────────┘
 ```
+
+若构建机不能出网，可直接从 [Releases](https://github.com/MiyauchiRenge/doclens/releases)
+下载已构建好的完整离线包（含三个镜像与 Docker RPM）。已有部署升级请用增量包
+`doclens-update-*.tar.gz`，无需重新导入全部镜像。
 
 若目标机可访问外网，或内网已部署镜像仓库（Harbor 等），两步可在同一台机器完成。
 
