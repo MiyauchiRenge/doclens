@@ -119,6 +119,27 @@ if [ "$READY" != "1" ]; then
   die "启动未完成，查看日志：cd compose && $DC logs --tail=80"
 fi
 
+# ---------------------------------------------------------------------------
+# 6. 等待 kkFileView 就绪
+#    JVM + LibreOffice 首次初始化需要 30~60 秒，期间预览 Office 会返回 502。
+#    这里以"不再返回 502"作为就绪判据，避免用户以为启动失败。
+# ---------------------------------------------------------------------------
+step "等待 kkFileView 就绪（首次启动较慢）"
+KK_READY=0
+for _ in $(seq 1 60); do
+  code=$(curl -s -o /dev/null -w "%{http_code}" --max-time 3 \
+         "http://127.0.0.1:${PORT}/preview/onlinePreview?url=" 2>/dev/null || true)
+  if [ -n "$code" ] && [ "$code" != "502" ]; then KK_READY=1; break; fi
+  sleep 2
+done
+
+if [ "$KK_READY" = "1" ]; then
+  info "kkFileView 已就绪"
+else
+  echo "  kkFileView 仍在启动，Office 预览可能暂时返回 502，稍后重试即可。"
+  echo "  查看进度：cd compose && $DC logs -f kkfileview"
+fi
+
 IP=$(hostname -I 2>/dev/null | awk '{print $1}')
 IP="${IP:-<本机IP>}"
 cat <<EOF
@@ -129,7 +150,4 @@ ${C_OK}================ 已启动 ================${C_OFF}
   自检  : http://${IP}:${PORT}/diag.html
   停止  : cd compose && $DC down
   日志  : cd compose && $DC logs -f
-
-  首次启动时 kkFileView 需要 30~60 秒完成初始化，
-  期间预览 Office 文件可能返回 502，稍后重试即可。
 EOF
