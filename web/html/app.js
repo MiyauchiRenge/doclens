@@ -411,6 +411,15 @@
 
   /* ---------------- 事件绑定 ---------------- */
 
+  /* 360 / QQ 等双核浏览器会把「已选中的文件」丢掉，导致 change 不触发，
+     表现为点击选择文件后毫无反应。检测到就提示换浏览器。 */
+  (function warnDualCoreBrowser() {
+    var ua = navigator.userAgent || "";
+    if (!/360SE|360EE|QIHU|MetaSr|QQBrowser/i.test(ua)) return;
+    var box = document.getElementById("browserWarn");
+    if (box) box.classList.remove("hidden");
+  })();
+
   /* 点击由 <label for="picker"> 原生触发，这里不再调用 picker.click()，
      否则在部分内核下会弹出两次文件选择框。
      键盘操作仍需手动触发（label 不响应回车）。 */

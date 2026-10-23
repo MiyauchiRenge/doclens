@@ -53,6 +53,16 @@ main { max-width: 1080px; margin: 0 auto; padding: 16px 24px 32px; }
   border: 0;
 }
 
+/* 双核浏览器提示 */
+.browser-warn {
+  background: #fef3c7;
+  border-bottom: 1px solid #fcd34d;
+  color: #92400e;
+  padding: 10px 24px;
+  font-size: 13px;
+  line-height: 1.6;
+}
+
 .panel { margin-top: 18px; background: var(--card); border: 1px solid var(--line); border-radius: 10px; padding: 16px; }
 .meta { display: flex; justify-content: space-between; gap: 12px; padding-bottom: 12px; border-bottom: 1px solid var(--line); }
 .fname { font-weight: 600; word-break: break-all; }
