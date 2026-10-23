@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="renderer" content="webkit">
+<title>上传自检</title>
+<style>
+  body { font-family: system-ui, "Microsoft YaHei", sans-serif; margin: 0; padding: 20px; background: #f6f7f9; color: #1b1f24; font-size: 14px; }
+  h1 { font-size: 18px; margin: 0 0 14px; }
+  .card { background: #fff; border: 1px solid #e3e6ea; border-radius: 8px; padding: 14px 16px; margin-bottom: 14px; }
+  .row { display: flex; gap: 8px; align-items: center; margin: 6px 0; }
+  .k { color: #6b7280; min-width: 130px; }
+  .ok { color: #15803d; font-weight: 600; }
+  .bad { color: #dc2626; font-weight: 600; }
+  button { padding: 7px 16px; border-radius: 6px; border: 1px solid #2563eb; background: #2563eb; color: #fff; cursor: pointer; font-size: 13px; }
+  button:disabled { opacity: .5; cursor: not-allowed; }
+  #log { font-family: Consolas, monospace; font-size: 12px; white-space: pre-wrap; background: #111; color: #0f0; padding: 10px; border-radius: 6px; min-height: 120px; }
+  input[type=file] { font-size: 13px; }
+</style>
+</head>
+<body>
+<h1>上传自检</h1>
+
+<div class="card">
+  <div class="row"><span class="k">User-Agent</span><span id="ua"></span></div>
+  <div class="row"><span class="k">fetch</span><span id="c-fetch"></span></div>
+  <div class="row"><span class="k">FormData</span><span id="c-fd"></span></div>
+  <div class="row"><span class="k">Promise</span><span id="c-promise"></span></div>
+  <div class="row"><span class="k">FileReader</span><span id="c-fr"></span></div>
+  <div class="row"><span class="k">navigator.sendBeacon</span><span id="c-beacon"></span></div>
+</div>
+
+<div class="card">
+  <p style="margin:0 0 10px">第 1 步：选择一个文件（看文件名是否出现在下面）</p>
+  <input id="f" type="file">
+  <p id="picked" style="margin:10px 0 0;color:#6b7280">未选择</p>
+
+  <p style="margin:18px 0 10px">第 2 步：点这里上传（若按钮无反应，说明 JS 未生效）</p>
+  <button id="go" disabled>测试上传</button>
+</div>
+
+<div class="card">
+  <p style="margin:0 0 8px">日志</p>
+  <div id="log"></div>
+</div>
+
+<script>
+(function () {
+  "use strict";
+  var logEl = document.getElementById("log");
+
+  function log(msg) {
+    var t = new Date().toTimeString().slice(0, 8);
+    logEl.textContent += "[" + t + "] " + msg + "\n";
+  }
+  function mark(id, ok, text) {
+    var e = document.getElementById(id);
+    e.textContent = text || (ok ? "可用" : "不可用");
+    e.className = ok ? "ok" : "bad";
+  }
+
+  document.getElementById("ua").textContent = navigator.userAgent;
+
+  mark("c-fetch",   typeof window.fetch === "function");
+  mark("c-fd",      typeof window.FormData === "function");
+  mark("c-promise", typeof window.Promise === "function");
+  mark("c-fr",      typeof window.FileReader === "function");
+  mark("c-beacon",  !!(navigator.sendBeacon && navigator.sendBeacon.bind));
+
+  window.onerror = function (msg, src, line) {
+    log("JS 错误: " + msg + " @ " + (src || "?") + ":" + line);
+  };
+  window.addEventListener("unhandledrejection", function (e) {
+    log("Promise 拒绝: " + (e.reason && e.reason.message || e.reason));
+  });
+
+  var input = document.getElementById("f");
+  var btn = document.getElementById("go");
+  var picked = document.getElementById("picked");
+
+  input.addEventListener("change", function () {
+    var f = input.files && input.files[0];
+    if (!f) { picked.textContent = "未选择"; btn.disabled = true; return; }
+    picked.textContent = "已选择：" + f.name + "  (" + f.size + " 字节, " + (f.type || "未知类型") + ")";
+    btn.disabled = false;
+    log("change 事件触发，文件数=" + input.files.length);
+  });
+
+  btn.addEventListener("click", function () {
+    var f = input.files && input.files[0];
+    if (!f) { log("没有文件"); return; }
+    btn.disabled = true;
+    log("开始上传 " + f.name);
+
+    var fd = new FormData();
+    fd.append("file", f, f.name);
+    var t0 = Date.now();
+
+    fetch("/api/upload", { method: "POST", body: fd })
+      .then(function (r) {
+        log("HTTP " + r.status + "  耗时 " + (Date.now() - t0) + "ms");
+        return r.text();
+      })
+      .then(function (text) {
+        log("响应: " + text.slice(0, 400));
+        btn.disabled = false;
+      })
+      .catch(function (err) {
+        log("请求失败: " + (err && err.name) + " / " + (err && err.message));
+        btn.disabled = false;
+      });
+  });
+
+  log("自检页已加载");
+})();
+</script>
+</body>
+</html>
