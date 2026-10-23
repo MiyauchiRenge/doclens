@@ -66,75 +66,57 @@
 
 ## 快速开始
 
-部署分两步：先在可联网的机器上生成离线包，再将离线包导入内网环境安装。
+两种方式，按机器情况选一种。
 
+### 方式一：联网机器，一条命令
+
+```bash
+git clone https://github.com/MiyauchiRenge/doclens.git
+cd doclens
+bash run.sh                 # 默认 8080
+bash run.sh --port 7783     # 指定端口
 ```
- ┌──────────── 构建机（可联网）──────────────┐      ┌───────── 内网目标机（离线）─────────┐
- │ 1. clone 仓库                            │      │ 3. 校验 + 解压                       │
- │ 2. ./build/build-bundle.sh               │ ───► │ 4. deploy/install.sh                 │
- │    → dist/doclens-1.0.1-x86_64.tar.gz    │ 传输 │    → http://<内网IP>:8080            │
- └──────────────────────────────────────────┘      └──────────────────────────────────────┘
-```
 
-若构建机不能出网，可直接从 [Releases](https://github.com/MiyauchiRenge/doclens/releases)
-下载已构建好的完整离线包（含三个镜像与 Docker RPM）。已有部署升级请用增量包
-`doclens-update-*.tar.gz`，无需重新导入全部镜像。
+脚本依次完成：检查 Docker → 生成 `compose/.env` → 构建 portal 镜像 →
+启动三个容器 → 健康检查 → 打印访问地址。
 
-若目标机可访问外网，或内网已部署镜像仓库（Harbor 等），两步可在同一台机器完成。
+首次运行会拉取 kkFileView 与 nginx 镜像（约 1.7 GB），耗时取决于网络。
 
-### 第 1 步：在构建机上生成离线包
+### 方式二：内网离线部署
 
-**构建机要求**：x86_64 Linux、Docker、可访问镜像仓库（Docker Hub 或内网 Harbor）、
-可访问 PyPI（构建 portal 镜像时需安装依赖）、磁盘 ≥ 10 GB。
+内网机器不能出网时，在**一台能联网的构建机**上出包，再拷进去。
+
+**构建机**：x86_64 Linux、Docker、可访问镜像仓库（Docker Hub 或内网 Harbor）、
+可访问 PyPI、磁盘 ≥ 10 GB。
 
 ```bash
 git clone https://github.com/MiyauchiRenge/doclens.git
 cd doclens
 ./build/build-bundle.sh
-# 产物：dist/doclens-1.0.0-x86_64.tar.gz（约 1.1 GB）
+# 产物：dist/doclens-1.0.1-x86_64.tar.gz
 ```
 
 构建脚本依次拉取镜像、构建 portal、执行健康检查，任一步失败即中止，
-不生成不可安装的包。
+不会产出装不上的包。目标机没有 dnf 源时加 `--with-rpms`，把 Docker 的 RPM 一并打进去。
 
-常用参数：
-
-```bash
-# 镜像已存在于本地（例如刚从内网仓库拉取），跳过拉取与构建
-./build/build-bundle.sh --no-pull
-
-# 一并打包 Docker 的 RPM（目标机未配置 dnf 源时使用）
-./build/build-bundle.sh --with-rpms
-```
-
-若构建机仅能访问内网仓库，修改 `versions.env` 中的镜像地址；pip 可指定国内源：
-
-```bash
-docker build --build-arg PIP_INDEX_URL=https://pypi.tuna.tsinghua.edu.cn/simple \
-  -t fileview/portal:1.0.0 services/portal
-```
-
-### 第 2 步：导入内网安装
-
-**目标机要求**：x86_64、Docker 20.10+、Compose v2、内存 ≥ 8 GB（推荐）、
-磁盘 ≥ 10 GB。
-
-内存低于 8 GB 时，kkFileView 的 JVM 与 LibreOffice 可能无法完成初始化，
-表现为预览返回 502；此时需调小 `KK_JAVA_OPTS`，详见[限制](#限制)与
-[docs/DEPLOY.md](docs/DEPLOY.md#排障)。
+**目标机**：x86_64、Docker 20.10+、Compose v2、内存 ≥ 8 GB（推荐）、磁盘 ≥ 10 GB。
 
 传输方式不限（U 盘、WinSCP、`scp`），需同时携带 `.tar.gz` 与 `.sha256`。
 
 ```bash
-sha256sum -c doclens-1.0.0-x86_64.tar.gz.sha256
-tar -xzf doclens-1.0.0-x86_64.tar.gz
-cd doclens-1.0.0-x86_64
+sha256sum -c doclens-1.0.1-x86_64.tar.gz.sha256
+tar -xzf doclens-1.0.1-x86_64.tar.gz
+cd doclens-1.0.1-x86_64
 
 sudo bash deploy/preflight.sh          # 可选，只读环境检查
 sudo bash deploy/install.sh --port 8080
 ```
 
 安装完成后访问 `http://<内网IP>:8080`。
+
+内存低于 8 GB 时，kkFileView 的 JVM 与 LibreOffice 可能无法完成初始化，
+表现为预览返回 502；此时需调小 `KK_JAVA_OPTS`，详见[限制](#限制)与
+[docs/DEPLOY.md](docs/DEPLOY.md#排障)。
 
 目标机未安装 Docker 时，参见 [docs/DEPLOY.md](docs/DEPLOY.md#无-docker-的机器)。
 
