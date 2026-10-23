@@ -411,7 +411,9 @@
 
   /* ---------------- 事件绑定 ---------------- */
 
-  el.drop.addEventListener("click", function () { el.picker.click(); });
+  /* 点击由 <label for="picker"> 原生触发，这里不再调用 picker.click()，
+     否则在部分内核下会弹出两次文件选择框。
+     键盘操作仍需手动触发（label 不响应回车）。 */
   el.drop.addEventListener("keydown", function (e) {
     if (e.key === "Enter" || e.key === " ") { e.preventDefault(); el.picker.click(); }
   });

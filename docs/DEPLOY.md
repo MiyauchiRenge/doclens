@@ -161,6 +161,7 @@ docker compose up -d --force-recreate
 
 | 现象 | 排查方向 |
 |---|---|
+| **双核浏览器（360 / QQ / 搜狗）点击无反应、无法选择文件** | 浏览器可能运行在 IE 兼容模式：该模式下不允许对 `display:none` 的文件框触发选择。页面已加 `X-UA-Compatible: IE=edge`、`renderer: webkit`，并把文件框改为 `label[for]` + 视觉隐藏。若仍失败，请切到「极速模式」（地址栏右侧闪电图标）后重试 |
 | **预览返回 502，nginx 日志为 `connect() failed (111: Connection refused) ... upstream: http://<ip>:8012`** | kkFileView 进程在但未监听 8012，通常是内存不足导致 JVM 未能完成初始化。`docker compose logs --tail=100 kkfileview` 查看是否有 `OutOfMemoryError`；调小 `KK_JAVA_OPTS`（如 `-Xmx384m`）或增加内存 |
 | 安装卡在"等待服务就绪" | `docker compose logs portal`；多为 tmpfs 不足或端口占用 |
 | 预览老格式一直转圈 | kkFileView 转码慢或队列堵塞：`docker compose logs kkfileview` |

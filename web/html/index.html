@@ -2,6 +2,9 @@
 <html lang="zh-CN">
 <head>
 <meta charset="utf-8">
+<!-- 强制双核浏览器（360、QQ 浏览器等）使用 Chromium 内核，而不是 IE 兼容模式 -->
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="renderer" content="webkit">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>内网文件预览</title>
 <link rel="stylesheet" href="/style.css">
@@ -13,12 +16,14 @@
 </header>
 
 <main>
-  <section id="drop" class="drop" tabindex="0" role="button" aria-label="选择或拖入文件">
+  <!-- 用 label + for 触发文件选择：不依赖 JS，也不依赖对隐藏 input 的 click()。
+       360 等双核浏览器的 IE 内核会拦截对 display:none 文件框的编程式点击。 -->
+  <label id="drop" class="drop" for="picker" tabindex="0" aria-label="选择或拖入文件">
     <div class="drop-icon">+</div>
     <p class="drop-main">拖入文件，或点击选择</p>
     <p class="drop-hint">单文件上传 · 支持范围见页脚</p>
-    <input id="picker" type="file" hidden>
-  </section>
+    <input id="picker" type="file" class="sr-only">
+  </label>
 
   <section id="panel" class="panel hidden">
     <div class="meta">
