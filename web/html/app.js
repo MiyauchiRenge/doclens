@@ -305,8 +305,8 @@
             el.status.className = "status ok";
             el.status.textContent = "处理完成，点击下载（会话有效期内可重复下载）： ";
             var a = document.createElement("a");
-            a.href = d.download;
-            a.textContent = d.filename || "下载 Word";
+            bindDownload(a, d.download, d.filename || "download");
+            a.textContent = d.filename || "下载";
             el.status.appendChild(a);
           } else if (d.status === "failed") {
             clearInterval(state.poll); state.poll = null;
@@ -430,6 +430,49 @@
       fetch("/api/session/" + encodeURIComponent(sid) + "/close", { method: "POST" }).catch(function () {});
     }
     state.sid = null; state.key = null; state.info = null;
+  }
+
+  /* 下载：用 fetch 取 blob 再存盘，**不能让浏览器做页面跳转**。
+   *
+   * 直接点 <a href="/api/download/..."> 时，浏览器把它当导航处理，
+   * 页面触发 pagehide -> sendBeacon 通知服务端清理会话 -> 令牌被删，
+   * 随后到达的下载请求就 410「下载链接不存在」。
+   * 保留 href 是为了支持右键另存 / 拖到新窗口。
+   */
+  function saveBlob(blob, filename) {
+    var url = URL.createObjectURL(blob);
+    var a = document.createElement("a");
+    a.href = url;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    setTimeout(function () { URL.revokeObjectURL(url); }, 10000);
+  }
+
+  function bindDownload(link, url, filename) {
+    if (!url) return;
+    link.href = url;
+    link.addEventListener("click", function (e) {
+      e.preventDefault();
+      setStatus("正在下载…", "");
+      fetch(url)
+        .then(function (r) {
+          if (!r.ok) {
+            return r.json().then(function (d) {
+              throw new Error(d.detail || ("下载失败（" + r.status + "）"));
+            });
+          }
+          return r.blob();
+        })
+        .then(function (blob) {
+          saveBlob(blob, filename);
+          setStatus("已开始下载：" + filename, "ok");
+        })
+        .catch(function (err) {
+          setStatus(err.message || "下载失败，会话可能已结束", "error");
+        });
+    });
   }
 
   /* ---------------- 事件绑定 ---------------- */
