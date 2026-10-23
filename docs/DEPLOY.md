@@ -161,7 +161,7 @@ docker compose up -d --force-recreate
 
 | 现象 | 排查方向 |
 |---|---|
-| **360 浏览器选择文件后无反应** | 已复现并确认属于浏览器自身行为：文件选择框能弹出，但确定后输入框仍显示「未选择任何文件」，即浏览器未把文件交给页面，`change` 事件不会触发。此时页面脚本与后端均正常（可在 `/diag.html` 观察 JS 状态为「已执行」、能力项全部可用）。**改用 Chrome / Edge / Firefox / 奇安信浏览器**；同为 Chromium 内核的奇安信浏览器实测正常，仅 360 存在该问题，其极速模式同样如此。页面已对这类 UA 显示提示 |
+| **360 浏览器选择文件后无反应** | 已复现并定位：选择框能弹出，但确定后输入框仍显示「未选择任何文件」，浏览器未把文件交给页面，`change` 不会触发。页面脚本与后端均正常（`/diag.html` 显示 JS 状态「已执行」、能力项全部可用）。**根因是该浏览器的扩展**——DevTools 的 Sources → Content scripts 可看到「360浏览器智能助手」等扩展注入的 `content.js`，拦截了文件选择。处理：在 `chrome://extensions` 禁用相关扩展，或改用 Chrome / Edge / Firefox / 奇安信浏览器（均已实测正常） |
 | **双核浏览器（360 / QQ / 搜狗）处于 IE 兼容模式时点击无反应** | 页面已加 `X-UA-Compatible: IE=edge`、`renderer: webkit`，并把文件框改为 `label[for]` + 视觉隐藏，避免触发对 `display:none` 输入框的限制 |
 | **预览返回 502，nginx 日志为 `connect() failed (111: Connection refused) ... upstream: http://<ip>:8012`** | kkFileView 进程在但未监听 8012，通常是内存不足导致 JVM 未能完成初始化。`docker compose logs --tail=100 kkfileview` 查看是否有 `OutOfMemoryError`；调小 `KK_JAVA_OPTS`（如 `-Xmx384m`）或增加内存 |
 | 安装卡在"等待服务就绪" | `docker compose logs portal`；多为 tmpfs 不足或端口占用 |

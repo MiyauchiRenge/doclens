@@ -2,63 +2,83 @@
 <html lang="zh-CN">
 <head>
 <meta charset="utf-8">
-<!-- 强制双核浏览器（360、QQ 浏览器等）使用 Chromium 内核，而不是 IE 兼容模式 -->
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="renderer" content="webkit">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>内网文件预览</title>
+<title>DocLens · 内网文档预览</title>
 <link rel="stylesheet" href="/style.css">
 </head>
 <body>
 <div id="browserWarn" class="browser-warn hidden">
-  检测到 360 / QQ 等双核浏览器。这类浏览器的文件选择可能无法把文件交给页面，
-  导致点击「选择文件」后没有反应。建议改用 <b>Chrome</b>、<b>Edge</b> 或 <b>Firefox</b>。
+  检测到 360 / QQ 等双核浏览器。这类浏览器的扩展可能拦截文件选择，导致点击后没有反应。
+  建议改用 <b>Chrome</b>、<b>Edge</b>、<b>Firefox</b> 或 <b>奇安信浏览器</b>。
 </div>
-<header>
-  <h1>内网文件预览</h1>
-  <p class="sub">支持 PDF / OFD / Office / 图片 等格式的在线预览与 PDF 转 Word</p>
-</header>
 
-<main>
-  <!-- 用 label + for 触发文件选择：不依赖 JS，也不依赖对隐藏 input 的 click()。
-       360 等双核浏览器的 IE 内核会拦截对 display:none 文件框的编程式点击。 -->
-  <label id="drop" class="drop" for="picker" tabindex="0" aria-label="选择或拖入文件">
-    <div class="drop-icon">+</div>
-    <p class="drop-main">拖入文件，或点击选择</p>
-    <p class="drop-hint">单文件上传 · 支持范围见页脚</p>
-    <input id="picker" type="file" class="sr-only">
-  </label>
-
-  <section id="panel" class="panel hidden">
-    <div class="meta">
-      <span id="fname" class="fname"></span>
-      <span id="fsize" class="fsize"></span>
+<div class="app">
+  <header class="topbar">
+    <div class="brand">
+      <div class="logo">DL</div>
+      <div class="brand-text">
+        <h1>DocLens</h1>
+        <p>内网文档预览与转换</p>
+      </div>
     </div>
-
-    <div class="actions">
-      <button id="btnPreview" class="btn primary">预览</button>
-      <button id="btnConvert" class="btn hidden">转 Word</button>
-      <button id="btnOcr" class="btn hidden">OCR 提取文字（无格式）</button>
-      <button id="btnOcrPdf" class="btn hidden">OCR 生成可搜索 PDF</button>
-      <button id="btnPdf" class="btn hidden">转 PDF</button>
-      <button id="btnClose" class="btn danger">关闭并清理</button>
+    <div class="topmeta">
+      <span class="pill">PDF</span>
+      <span class="pill">OFD</span>
+      <span class="pill">Office</span>
+      <span class="pill">OCR</span>
     </div>
+  </header>
 
-    <p id="status" class="status"></p>
+  <main class="main">
+    <label id="drop" class="drop" for="picker" tabindex="0" aria-label="选择或拖入文件">
+      <div class="drop-icon" aria-hidden="true">
+        <svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" stroke-width="1.8"
+             stroke-linecap="round" stroke-linejoin="round">
+          <path d="M12 16V4m0 0L7 9m5-5 5 5"></path>
+          <path d="M4 16v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2"></path>
+        </svg>
+      </div>
+      <p class="drop-main">拖入文件，或点击选择</p>
+      <p class="drop-hint">单文件 · 不超过 200 MB · 会话结束自动清理</p>
+      <input id="picker" type="file" class="sr-only">
+    </label>
 
-    <div id="viewer" class="viewer hidden">
-      <iframe id="frame" title="预览"></iframe>
-      <img id="image" alt="预览" class="hidden">
-      <div id="ofdHost" class="ofd-host hidden"></div>
-      <div id="archiveHost" class="archive-host hidden"></div>
-    </div>
-  </section>
-</main>
+    <section id="panel" class="panel hidden">
+      <div class="filehead">
+        <span id="fileBadge" class="badge b-def">FILE</span>
+        <div class="filemeta">
+          <span id="fname" class="fname"></span>
+          <span id="fsize" class="fsize"></span>
+        </div>
+      </div>
 
-<footer>
-  <p>文件仅在处理期间临时驻留于内存盘，会话结束或超时后自动销毁；页面关闭即触发清理。</p>
-  <p class="muted">支持：PDF、OFD、DOC/DOCX、XLS/XLSX、PPT/PPTX、WPS、RTF、图片、文本、音视频、压缩包等</p>
-</footer>
+      <div class="actions">
+        <button id="btnPreview" class="btn primary">预览</button>
+        <button id="btnConvert" class="btn hidden">转 Word</button>
+        <button id="btnOcr" class="btn hidden">OCR 提取文字</button>
+        <button id="btnOcrPdf" class="btn hidden">OCR 可搜索 PDF</button>
+        <button id="btnPdf" class="btn hidden">转 PDF</button>
+        <button id="btnClose" class="btn ghost">关闭并清理</button>
+      </div>
+
+      <p id="status" class="status"></p>
+
+      <div id="viewer" class="viewer hidden">
+        <iframe id="frame" title="预览"></iframe>
+        <img id="image" alt="预览" class="hidden">
+        <div id="ofdHost" class="ofd-host hidden"></div>
+        <div id="archiveHost" class="archive-host hidden"></div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="footer">
+    <p class="privacy">文件仅在处理期间临时驻留于内存盘，会话结束或超时后自动销毁；关闭页面即触发清理。</p>
+    <p class="formats">支持 PDF、OFD、DOC/DOCX、XLS/XLSX、PPT/PPTX、WPS、RTF、图片、文本、音视频、压缩包</p>
+  </footer>
+</div>
 
 <script src="/app.js"></script>
 </body>

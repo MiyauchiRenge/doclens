@@ -153,12 +153,35 @@
 
   /* ---------------- 上传 ---------------- */
 
+  /* 文件类型徽标：扩展名 + 配色 */
+  var BADGES = {
+    pdf: ["PDF", "b-pdf"], ofd: ["OFD", "b-ofd"],
+    doc: ["DOC", "b-doc"], docx: ["DOCX", "b-doc"], rtf: ["RTF", "b-doc"],
+    odt: ["ODT", "b-doc"], wps: ["WPS", "b-doc"],
+    xls: ["XLS", "b-xls"], xlsx: ["XLSX", "b-xls"], csv: ["CSV", "b-xls"], et: ["ET", "b-xls"],
+    ppt: ["PPT", "b-ppt"], pptx: ["PPTX", "b-ppt"], dps: ["DPS", "b-ppt"],
+    zip: ["ZIP", "b-zip"], rar: ["RAR", "b-zip"], "7z": ["7Z", "b-zip"],
+    tar: ["TAR", "b-zip"], gz: ["GZ", "b-zip"], tgz: ["TGZ", "b-zip"], bz2: ["BZ2", "b-zip"],
+    png: ["PNG", "b-img"], jpg: ["JPG", "b-img"], jpeg: ["JPG", "b-img"],
+    gif: ["GIF", "b-img"], bmp: ["BMP", "b-img"], webp: ["WEBP", "b-img"], svg: ["SVG", "b-img"]
+  };
+
+  function setBadge(name) {
+    var node = document.getElementById("fileBadge");
+    if (!node) return;
+    var ext = (name || "").toLowerCase().split(".").pop();
+    var b = BADGES[ext] || ["FILE", "b-def"];
+    node.textContent = b[0];
+    node.className = "badge " + b[1];
+  }
+
   function upload(file) {
     if (!file) return;
     resetPanel();
     el.panel.classList.remove("hidden");
     el.fname.textContent = file.name;
     el.fsize.textContent = fmtSize(file.size);
+    setBadge(file.name);
     setStatus("上传中…");
 
     var form = new FormData();
